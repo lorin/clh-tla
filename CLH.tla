@@ -1,6 +1,6 @@
 \* A CLH lock
 ---- MODULE CLH ----
-EXTENDS Naturals, Integers, Sequences, TLC
+EXTENDS Integers, Sequences
 
 CONSTANTS NProc,
           GRANTED,

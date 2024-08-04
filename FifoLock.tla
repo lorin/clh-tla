@@ -7,7 +7,7 @@ CONSTANT Threads
 VARIABLES queue, state
 
 TypeOK == /\ queue \in Seq(Threads)
-          /\ state \in [Threads -> {"ready", "requested", "acquired", "in-cs", "released"}]
+          /\ state \in [Threads -> {"ready", "requested", "acquired", "in-cs"}]
         
 
 Init == /\ queue = <<>>
@@ -18,27 +18,27 @@ Request(thread) ==
     /\ queue' = Append(queue, thread)
     /\ state' = [state EXCEPT ![thread]="requested"]
 
-Acquired(thread) ==
+Acquire(thread) ==
     /\ state[thread] = "requested"
     /\ Head(queue) = thread
     /\ state' = [state EXCEPT ![thread]="acquired"]
     /\ UNCHANGED queue
 
-CriticalSection(thread) ==
+EnterCriticalSection(thread) ==
     /\ state[thread] = "acquired"
     /\ state' = [state EXCEPT ![thread]="in-cs"]
     /\ UNCHANGED queue
 
-Released(thread) ==
+Release(thread) ==
     /\ state[thread] = "in-cs"
     /\ queue' = Tail(queue)
     /\ state ' = [state EXCEPT ![thread]="ready"]
 
 
 Next == \/ \E t \in Threads : \/ Request(t)
-                              \/ Acquired(t)
-                              \/ CriticalSection(t)
-                              \/ Released(t)
+                              \/ Acquire(t)
+                              \/ EnterCriticalSection(t)
+                              \/ Release(t)
          
 Spec == Init /\ [][Next]_<<queue, state>>
 
