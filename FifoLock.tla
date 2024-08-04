@@ -1,6 +1,6 @@
 \* A lock that grants access in FIFO order
 ---- MODULE FifoLock ----
-EXTENDS TLC, Sequences
+EXTENDS Sequences
 
 CONSTANT Threads
 
