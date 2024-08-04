@@ -54,7 +54,7 @@ AcquireLock(process) ==
     /\ state' = [state EXCEPT ![process]="acquired"]
     /\ UNCHANGED <<requests, myreq, watch, tail>>
 
-CriticalSection(process) ==
+EnterCriticalSection(process) ==
     /\ state[process] = "acquired"
     /\ state' = [state EXCEPT ![process]="in-cs"]
     /\ UNCHANGED <<requests, myreq, watch, tail>>
@@ -71,7 +71,7 @@ GrantLock(process) ==
 Next == \E p \in Processes : \/ MarkPending(p)
                              \/ EnqueueRequest(p)
                              \/ AcquireLock(p)
-                             \/ CriticalSection(p)
+                             \/ EnterCriticalSection(p)
                              \/ GrantLock(p)
   
 Unowned(request) ==

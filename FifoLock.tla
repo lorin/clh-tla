@@ -42,6 +42,11 @@ Next == \/ \E t \in Threads : \/ Request(t)
          
 Spec == Init /\ [][Next]_<<queue, state>>
 
+
+(***************************************
+ * Invariants                          * 
+ ***************************************)
+
 MutualExclusion ==
     \A t1,t2 \in Threads : (state[t1] = "in-cs" /\ state[t2] = "in-cs") => t1=t2
 
