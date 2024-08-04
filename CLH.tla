@@ -93,10 +93,8 @@ Mapping == INSTANCE FifoLock
               [] state[p]="to-enqueue" -> "ready"
               [] state[p]="waiting" -> "requested"
               [] state[p]="acquired" -> "acquired"
-              [] state[p]="in-cs" -> "in-cs"
-              [] OTHER -> state[p]]
+              [] state[p]="in-cs" -> "in-cs"]
 
 Refinement == Mapping!Spec
-
 
 ====
