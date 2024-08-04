@@ -7,8 +7,9 @@ CONSTANTS NProc,
           PENDING,
           X \* Don't care
 
+first == 0 \* Initial request on the queue, not owned by any process
 Processes == 1..NProc
-RequestIDs == Processes \union {0}
+RequestIDs == Processes \union {first}
 
 NIL == -1
 
@@ -28,10 +29,10 @@ TypeOk ==
     /\ state \in [Processes -> {"ready", "to-enqueue", "waiting", "acquired", "in-cs"}]
 
 Init ==
-    /\ requests = [r \in RequestIDs |-> IF r = 0 THEN GRANTED ELSE X]
+    /\ requests = [r \in RequestIDs |-> IF r = first THEN GRANTED ELSE X]
     /\ myreq = [p \in Processes |-> p] \* initially, process id = request id
     /\ watch = [p \in Processes |-> NIL]
-    /\ tail = 0
+    /\ tail = first
     /\ state = [p \in Processes |-> "ready"]
 
 MarkPending(process) ==
@@ -96,5 +97,8 @@ Mapping == INSTANCE FifoLock
               [] state[p]="in-cs" -> "in-cs"]
 
 Refinement == Mapping!Spec
+
+MutualExclusion ==
+    \A p1,p2 \in Processes : (state[p1] = "in-cs" /\ state[p2] = "in-cs") => p1=p2
 
 ====
