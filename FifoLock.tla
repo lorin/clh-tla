@@ -32,14 +32,15 @@ CriticalSection(thread) ==
 Released(thread) ==
     /\ state[thread] = "in-cs"
     /\ queue' = Tail(queue)
-    /\ state ' = [state EXCEPT ![thread]="released"]
+    /\ state ' = [state EXCEPT ![thread]="ready"]
+
 
 Next == \/ \E t \in Threads : \/ Request(t)
                               \/ Acquired(t)
                               \/ CriticalSection(t)
                               \/ Released(t)
-        \/ (\A t \in Threads : state[t] = "released") /\ UNCHANGED <<queue, state>>
          
+Spec == Init /\ [][Next]_<<queue, state>>
 
 MutualExclusion ==
     \A t1,t2 \in Threads : (state[t1] = "in-cs" /\ state[t2] = "in-cs") => t1=t2

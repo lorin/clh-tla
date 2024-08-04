@@ -1,6 +1,6 @@
 \* A CLH lock
 ---- MODULE CLH ----
-EXTENDS Naturals, TLC
+EXTENDS Naturals, Integers, Sequences, TLC
 
 CONSTANTS NProc,
           GRANTED,
@@ -10,7 +10,7 @@ CONSTANTS NProc,
 Processes == 1..NProc
 RequestIDs == Processes \union {0}
 
-NIL == CHOOSE NIL : NIL \notin RequestIDs
+NIL == -1
 
 
 VARIABLES
@@ -22,7 +22,7 @@ VARIABLES
 
 TypeOk ==
     /\ requests \in [RequestIDs -> {PENDING, GRANTED, X}]
-    /\ myreq \in [Processes -> {PENDING, GRANTED, X}]
+    /\ myreq \in [Processes -> RequestIDs]
     /\ watch \in [Processes -> RequestIDs \union {NIL}]
     /\ tail \in RequestIDs
     /\ state \in [Processes -> {"ready", "to-enqueue", "waiting", "acquired", "in-cs"}]
@@ -49,9 +49,10 @@ EnqueueRequest(process) ==
     /\ UNCHANGED <<requests, myreq>>
 
 AcquireLock(process) ==
-    /\ myreq[watch[process]] = GRANTED
+    /\ state[process] = "waiting"
+    /\ requests[watch[process]] = GRANTED
     /\ state' = [state EXCEPT ![process]="acquired"]
-    /\ UNCHANGED <<myreq, watch, tail>>
+    /\ UNCHANGED <<requests, myreq, watch, tail>>
 
 CriticalSection(process) ==
     /\ state[process] = "acquired"
@@ -68,10 +69,34 @@ GrantLock(process) ==
     /\ UNCHANGED <<watch, tail>>
 
 Next == \E p \in Processes : \/ MarkPending(p)
-                           \/ EnqueueRequest(p)
-                           \/ AcquireLock(p)
-                           \/ CriticalSection(p)
-                           \/ GrantLock(p)
+                             \/ EnqueueRequest(p)
+                             \/ AcquireLock(p)
+                             \/ CriticalSection(p)
+                             \/ GrantLock(p)
+  
+Unowned(request) ==
+    ~ \E p \in Processes : myreq[p] = request
+
+\* Need to reconstruct the queue to do our mapping
+RECURSIVE QueueFromTail(_)
+QueueFromTail(rid) ==
+    IF Unowned(rid) THEN <<>> ELSE 
+        LET tl == CHOOSE p \in Processes : myreq[p] = rid
+            r == watch[tl]
+        IN Append(QueueFromTail(r), tl)
+
+Mapping == INSTANCE FifoLock
+    WITH queue <- QueueFromTail(tail),
+         Threads <- Processes,
+         state <- [p \in Processes |-> 
+            CASE state[p]="ready" -> "ready"
+              [] state[p]="to-enqueue" -> "ready"
+              [] state[p]="waiting" -> "requested"
+              [] state[p]="acquired" -> "acquired"
+              [] state[p]="in-cs" -> "in-cs"
+              [] OTHER -> state[p]]
+
+Refinement == Mapping!Spec
 
 
 ====
