@@ -4,10 +4,10 @@ EXTENDS Sequences
 
 CONSTANT Threads
 
-VARIABLES queue, state
+VARIABLES state, queue
 
-TypeOK == /\ queue \in Seq(Threads)
-          /\ state \in [Threads -> {"ready", "requested", "acquired", "in-cs"}]
+TypeOK == /\ state \in [Threads -> {"ready", "requested", "acquired", "in-cs"}]
+          /\ queue \in Seq(Threads)
         
 
 Init == /\ queue = <<>>
@@ -40,7 +40,7 @@ Next == \/ \E t \in Threads : \/ Request(t)
                               \/ EnterCriticalSection(t)
                               \/ Release(t)
          
-Spec == Init /\ [][Next]_<<queue, state>>
+Spec == Init /\ [][Next]_<<state, queue>>
 
 
 (***************************************
